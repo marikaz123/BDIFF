@@ -1,0 +1,44 @@
+# ------------------------
+#  MAKEFILE for BDIFF.EXE
+#  (c)1996 'marikaz'
+# ------------------------
+
+ASM=tasm
+LINK=tlink
+
+!if $d(DEBUG)
+ASMFLAGS=/m /zi
+LINKFLAGS=/v
+!else
+ASMFLAGS=/m
+LINKFLAGS=
+!endif
+
+OUTDIR=bin
+INCDIR=inc
+
+OBJ=main.obj garg.obj comp.obj comm.obj
+INC=$(INCDIR)\head.inc $(INCDIR)\form.inc
+EXE=$(OUTDIR)\bdiff.exe
+
+all: $(OUTDIR) $(EXE)
+
+$(OUTDIR):
+           @if not exist $(OUTDIR) mkdir $(OUTDIR)
+
+main.obj: main.asm $(INC)
+          $(ASM) $(ASMFLAGS) main.asm
+garg.obj: garg.asm $(INC)
+          $(ASM) $(ASMFLAGS) garg.asm
+comp.obj: comp.asm $(INC)
+          $(ASM) $(ASMFLAGS) comp.asm
+comm.obj: comm.asm $(INC)
+          $(ASM) $(ASMFLAGS) comm.asm
+
+$(EXE): $(OBJ) $(INC)
+        $(LINK) $(LINKFLAGS) $(OBJ),$(EXE)
+
+clean:
+       del bin\*.map
+       del *.obj
+       del bin\*.exe
