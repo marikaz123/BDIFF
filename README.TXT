@@ -36,7 +36,5 @@ Kompilacja:
  - W programie wystepuja odwolania do makr zawartych w pliku fileio.mac,
    ktorego nie ma w repozytorium. Makra wykonuja standardowe operacje na
    plikach.
- - Kompilacja main.asm z flaga /dLANGEN wygeneruje program z komunikatami
-   w jezyku angielskim.
 
 Kompilacja i testy: TASM, DOSBox 0.74-3
