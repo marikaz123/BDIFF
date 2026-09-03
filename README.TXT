@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 
- *** BDIFF v0.4.4 ***                                      (c)1996 'marikaz'
+ *** BDIFF v0.5 ***                                      (c)1996 'marikaz'
 
  Porownuje dwa pliki i wyswietla raport przedstawiajacy znalezione roznice.
 
