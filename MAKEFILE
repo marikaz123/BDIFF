@@ -1,7 +1,7 @@
-# ------------------------
-#  MAKEFILE for BDIFF.EXE
-#  (c)1996 'marikaz'
-# ------------------------
+#  makefile for BDIFF.EXE   --   'marikaz'
+#
+# /DDEBUG  - create debug version
+# /DVDT    - include version number
 
 ASM=tasm
 LINK=tlink
@@ -11,14 +11,18 @@ ASMFLAGS=/m /zi
 LINKFLAGS=/v
 !else
 ASMFLAGS=/m
-LINKFLAGS=
+LINKFLAGS=/x
+!endif
+
+!if $d(VDT)
+ASMFLAGS=$(ASMFLAGS) /dVDT
 !endif
 
 OUTDIR=bin
 INCDIR=inc
 
 OBJ=main.obj garg.obj comp.obj comm.obj
-INC=$(INCDIR)\head.inc $(INCDIR)\form.inc
+INC=$(INCDIR)\bdiff.inc $(INCDIR)\form.inc
 EXE=$(OUTDIR)\bdiff.exe
 
 all: $(OUTDIR) $(EXE)
@@ -37,8 +41,7 @@ comm.obj: comm.asm $(INC)
 
 $(EXE): $(OBJ) $(INC)
         $(LINK) $(LINKFLAGS) $(OBJ),$(EXE)
-
 clean:
-       del bin\*.map
+       del $(OUTDIR)\*.map
+       del $(OUTDIR)\*.exe
        del *.obj
-       del bin\*.exe

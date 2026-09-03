@@ -1,13 +1,13 @@
-;--------------------------------------+
-;Compare:PROC                          |
-;porownaj i wypelnij formularz raportu
+;--------------------------------+
+;BDIFF ** Compare:PROC rev. A ** |
+;
 
-INCLUDE INC\head.inc
+INCLUDE .\INC\bdiff.inc
 
         .MODEL SMALL
         .CODE
 
-EXTRN  Conv2Hex:PROC, Write2Scr:PROC
+EXTRN  Conv2Hex:PROC,Write2Scr:PROC
 EXTRN  vProc:WORD
 PUBLIC Compare
 
@@ -26,17 +26,17 @@ comp:
         pop cx
         cmp ah,al
         je @@ev
-        call DiffSrv ; al=f1, ah=f2, proc. musi odtworzyc cx
+        call DiffSrv ;al=f1, ah=f2, proc. ma odtworzyc cx
         inc bx
-        jc @@prt ;- limit programu dla znalezionych roznic
+        cmp bx,MAXD ;limit programu dla znalezionych roznic
+        je @@prt
         cmp [maxDiff.wMax],bx
-        je @@ust ;- limit uzytkownika dla znalezionych roznic
+        je @@ust ;limit uzytkownika dla znalezionych roznic
   @@ev:
         add [currOffs.wCntL],1
         adc [currOffs.wCntH],0
         loop comp
         xor ax,ax
-        clc
         jmp @@ret
 @@prt:
         mov ax,2

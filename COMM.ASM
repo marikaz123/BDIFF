@@ -1,14 +1,16 @@
-;-------------------+
-; Wspolne procedury |
+;---------------------------+
+; BDIFF - wspolne procedury |
 
-INCLUDE INC\head.inc
+INCLUDE .\INC\bdiff.inc
 
           .MODEL SMALL
           .CODE
 
 PUBLIC Long2DecR,Long2HexR,Long2Dec
 PUBLIC ConvDate,ConvTime,Conv2Hex
-PUBLIC Write2Scr,CpyStr
+PUBLIC Write2Scr,CpyStr,TrueName
+;PUBLIC ToLower
+loc_0  DW  ?
 
 ;---------------------+
 ;we: cx=liczba bajtow |
@@ -22,29 +24,29 @@ Write2Scr PROC
           ret
 Write2Scr ENDP
 
-;-----------------------+
-; ds:si = cag zrodlowy  |
-; ds:di = docelowy
+;----------------------+
+;ds:si = cag zrodlowy  |
+;ds:di = docelowy
 CpyStr PROC
        LOCALS
-  @@l:
        mov al,[si]
        or al,al
        jz @@x
        mov [di],al
        inc si
        inc di
-       jmp @@l
+       jmp CpyStr
   @@x:
        ret
 CpyStr ENDP
 
-;------------------------------------------+
-;we: ax = czas w formacie MBR              |
-;    ds:di = wskaznik do ciagu docelowego
+;--------------------------------------------+
+;we: ax = czas w formacie MBR                |
+;    ds:di = wskaznik na ciag docelowy
+
 ConvTime  PROC
           LOCALS
-          mov cs:[loc_0],ax ; zachowaj ax (?)
+          mov cs:[loc_0],ax
           and ax,MASK hour
           mov cl,hour
           shr ax,cl
@@ -68,14 +70,13 @@ ConvTime  PROC
           mov ax,cs:[loc_0] ;odtworz ax
           ret
 ConvTime  ENDP
-loc_0 DW  ?   ;? sprawdzic czy to konieczne
 
 ;-----------------------------+
 ;we: ax = data w formacie MBR |
 ;ds:di = wskaznik na cel
 ConvDate  PROC
           LOCALS
-          mov cs:[loc_0],ax  ;?
+          mov cs:[loc_0],ax
           and ax,MASK year
           mov cl,year
           shr ax,cl
@@ -108,14 +109,14 @@ ConvDate  PROC
           xchg al,ah
           mov [di],ax
           add di,2
-          mov ax,cs:[loc_0] ;?
+          mov ax,cs:[loc_0]
           ret
 ConvDate  ENDP
 
 ;----------------------------------+
 ;konwertuj bajt w AL na ciag ascii |
 ;we: al = bajt
-;    ds:di = wsk, na bufor
+;    ds:di = wsk. na bufor
 Conv2Hex  PROC
           LOCALS
           push ax cx
@@ -126,10 +127,10 @@ Conv2Hex  PROC
           mov cx,2
     @@cv:
           xchg al,ah
-          and al,0fh
-          cmp al,10
-          sbb al,69h
-          das
+          and al,0fh  ;konwersja do ascii
+          cmp al,10   ;           .
+          sbb al,69h  ;     .
+          das         ; .
           loop @@cv  ;x2
           xchg ah,al
           mov [di],ax
@@ -138,8 +139,8 @@ Conv2Hex  PROC
 Conv2Hex  ENDP
 
 ;-----------------------------------+
-; konwertuj podwojne slowo w DX:AX  |
-; do dziesietnego stringa (wst.)
+;konwertuj podwojne slowo w DX:AX   |
+;do dziesietnego stringa (rev.dir.)
 ;we: dx:ax = wartosc do konwersji
 ;    ds:di = wsk. na koniec bufora
 ;wy: ds:di = pierwszy bajt bufora
@@ -169,10 +170,10 @@ Long2DecR ENDP
 
 ;--------------------------------------+
 ;konwertuj podw. slowo w DX:AX         |
-;na ciag liczb hex. w ascii
-;we:  dx:ax = wartosc do konwersji
-;     ds:di = wsk. na koniec bufora
-;wyj: ds:di = wsk. na poczatek bufora
+;na ciag cyfr hex. w ascii (rev.dir)
+;we: dx:ax = wartosc do konwersji
+;    ds:di = wsk. na koniec bufora
+;wy: ds:di = wsk. na poczatek bufora
 Long2HexR PROC
           LOCALS
           push ax bx cx dx si
@@ -187,7 +188,7 @@ Long2HexR PROC
           add dl,'0'
           cmp dl,'9'
           jbe @@hx
-          add dl,7
+          add dl,7 ;cyfry hex. > 9
     @@hx:
           mov [di],dl
           mov dx,bx
@@ -246,4 +247,45 @@ Long2Dec PROC
          ret
 Long2Dec ENDP
 
+;---------------------------------------------+
+;Zamien filespec na truename                  |
+;we: ds:si = wskaznik na filespec i truename
+;            (ten sam bufor)
+;wy: nie ma
+TrueName PROC
+         push es
+         mov ax,@DATA
+         mov es,ax
+         mov di,si
+         mov ah,60h
+         int 21h
+         pop es
+         ret
+TrueName ENDP
+
+COMMENT #
+;-------------------------------------+
+;Zamien na male litery                |
+;we: ds:di = wskaznik na ciag ascii
+;            !zakonczony zerem!
+;wy: nie ma
+ToLower  PROC
+         LOCALS
+         push cx si
+@@tl:
+         cmp BYTE PTR [si],0 ;null
+         jz @@ex
+         cmp BYTE PTR [si],'A'
+         jb @@skip
+         cmp BYTE PTR [si],'Z'
+         ja @@skip
+         or BYTE PTR [si],20h
+@@skip:
+         inc si
+         jmp @@tl
+@@ex:
+         pop si cx
+         ret
+ToLower  ENDP
+#
          END

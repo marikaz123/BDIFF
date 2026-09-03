@@ -1,25 +1,26 @@
 COMMENT #-------------------------------------------------------------------+
 
-  BDIFF v0.4.1 (beta) ** (c)1996 'marikaz'
-  Compare two binary files and show the differences.
-  Porownaj binarnie dwa pliki i pokaz roznice.
+  BDIFF v0.5 *** (c)1996 'marikaz'
+  Porownaj bimarnie dwa pliki i pokaz roznice.
+  Compare the two files as binary files and print out the differences.
 
-  Usage:
-  BDIFF.EXE [/h] [/b=nn] <File1Spec> <File2Spec>
+  Skladnia:
+  BDIFF.EXE [/d] [/b[=]nn] [drive:][path]<file1> [drive:][path]<file2>
 
-+---------------------------------------------------------------/ MOD2509 /-#
++-----------------------------------------------------------------/ F2509 /-#
 
-INCLUDE INC\head.inc
+INCLUDE .\INC\bdiff.inc
 INCLUDE ..\..\_MAC\fileio.mac  ;obsl. plikow
 
         .MODEL SMALL
         .CODE
 
-EXTRN GetParam:PROC,Compare:PROC
-EXTRN ConvDate:PROC,ConvTime:PROC
-EXTRN Write2Scr:PROC,CpyStr:PROC
-EXTRN Long2HexR:PROC,Long2DecR:PROC
-EXTRN Long2Dec:PROC
+EXTRN  GetParam:PROC,Compare:PROC
+EXTRN  ConvDate:PROC,ConvTime:PROC
+EXTRN  Write2Scr:PROC,CpyStr:PROC
+EXTRN  Long2HexR:PROC,Long2DecR:PROC
+EXTRN  Long2Dec:PROC,TrueName:PROC
+;EXTRN ToLower:PROC
 
 PUBLIC vProc
 
@@ -29,14 +30,19 @@ Start:
         mov dx,@DATA
         mov ds,dx
         jc param_err
-        mov bx,optH
+        mov bx,optD
         mov dx,cs:[vProc+bx]
         mov cs:[vProc],dx
-
+        mov si,OFFSET fSpec1
+        call TrueName
+        ;call ToLower
+        mov si,OFFSET fSpec2
+        call Truename
+        ;call ToLower
         FFIND fSpec1 ;FFIND (FINDFIRST) <fileSpec>,[fileAttribute]
         jc not_exists
-        mov ah,2fh ;adres DTA
-        int 21h
+        mov ah,2fh
+        int 21h ;ES:BX -> DTA
         mov ax,es:[bx+18h]
         mov di,OFFSET _cd1
         call ConvDate
@@ -121,19 +127,18 @@ do:
   cmpr:
         lea si,f1buff
         lea di,f2buff
-        call Compare ;we: si=buf1, di=buf2, ;wyj: if cy, ax=1 user, ah=2 prg.
+        call Compare ;i: si=buf1,di=buf2 o: cy, ax=1 user lim.,ah=2 prg. lim.
         jnc do
-
 eof:
         FCLOSE ;FCLOSE [handle]
         xchg bx,htmp
         FCLOSE
         mov bx,ax ;status w bx
         jmp messages
-
 exit:
         mov ah,4ch
         int 21h
+
 ;-----/ komunikaty /---------
 param_err:
         cmp al,4
@@ -153,12 +158,12 @@ param_err:
         jmp exit
 
 messages:
-        cmp [diffCnt.wCntL],0
+        cmp [diffCnt.wCntL],0 ;przekrecony licznik?
         jne chk_sizes
         mov dx,OFFSET ndMsg
         mov cx,NDM
         call Write2Scr
-
+        jmp exit ;???
 chk_sizes:
         mov ax,[f1Size.fsL]
         mov dx,[f1Size.fsH]
@@ -172,7 +177,7 @@ chk_sizes:
         mov cx,DSM
         call Write2Scr
 chk_stat: ;ax=1 uzytkownik, ax=2 program
-        cmp ax,2
+        cmp bx,2
         jne user_brk
         mov dx,OFFSET tmMsg
         mov cx,TMM
@@ -198,7 +203,7 @@ cl_inv_arg:
         mov cx,PEM
         call Write2Scr
         jmp exit
-;----------------------------------
+
 empty_file:
         mov dx,OFFSET eErrMsg
         mov cx,EEM
@@ -221,26 +226,30 @@ err_file_io:
         jmp exit
 
         EVEN
-vProc   DW Long2DecR,Long2HexR
-;-----------------------------
+vProc   DW Long2HexR,Long2DecR ;moze przeniesc
+
         .DATA
 
-PUBLIC  fSpec1,fSpec2,optH
+PUBLIC  fSpec1,fSpec2,optD
 PUBLIC  _b1,_b2,form0,_offs,FORM0L
 PUBLIC  maxDiff,currOffs,diffCnt,param
 
 hTmp DW 1
-optH DW 0
+optD DW 0
 
 currOffs CNT  <0>
 diffCnt  CNT  <0>
-maxDiff  DLIM <0,?>
-param    FL   <0,0,0> ;f0 rezerwowy.
+maxDiff  DLIM <?,-1> ;-1 jako znacznik
+param    FL   <0,0,0> ;f0 rezerwowy...
 
-fSpec1 DB 64 DUP(0)
-fSpec2 DB 64 DUP(0)
+fSpec1 DB 79 DUP(0),0
+fSpec2 DB 79 DUP(0),0
 
-INCLUDE INC\form.inc
+INCLUDE .\INC\form.inc
+
+IFDEF VDT
+ DB 13,10,'Version ',COMPDT
+ENDIF
 
 f1Size SIZEF<>
 f2Size SIZEF<>
