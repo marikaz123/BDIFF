@@ -1,1 +1,3 @@
-!BDIFF.EXE
+*.TXT
+!README.TXT
+BIN/
