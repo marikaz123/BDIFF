@@ -1,16 +1,16 @@
 COMMENT #-------------------------------------------------------------------+
 
-  BDIFF v0.5 *** (c)1996 'marikaz'
+  BDIFF v1.0 *** (c)1996 'marikaz'
   Porownaj bimarnie dwa pliki i pokaz roznice.
   Compare the two files as binary files and print out the differences.
 
   Skladnia:
   BDIFF.EXE [/d] [/b[=]nn] [drive:][path]<file1> [drive:][path]<file2>
 
-+-----------------------------------------------------------------/ F2509 /-#
++-----------------------------------------------------------------/ F2609 /-#
 
 INCLUDE .\INC\bdiff.inc
-INCLUDE ..\..\_MAC\fileio.mac  ;obsl. plikow
+INCLUDE ..\..\_MAC\fileio.mac
 
         .MODEL SMALL
         .CODE
@@ -19,15 +19,24 @@ EXTRN  GetParam:PROC,Compare:PROC
 EXTRN  ConvDate:PROC,ConvTime:PROC
 EXTRN  Write2Scr:PROC,CpyStr:PROC
 EXTRN  Long2HexR:PROC,Long2DecR:PROC
-EXTRN  Long2Dec:PROC,TrueName:PROC
-;EXTRN ToLower:PROC
-
+EXTRN  Long2Dec:PROC,Byte2dDec:PROC
+EXTRN  TrueName:PROC,Working2:PROC
+;EXTRN  ToLower:PROC
 PUBLIC vProc
 
         JUMPS
 Start:
+        mov ax,@DATA
+        mov es,ax
+        xor ax,ax
+        mov cx,TNBL ;128
+        mov di,OFFSET fbuffs
+        rep stosw ;zeruj bufory filespec
+        CURSOR SHAPE ;CURSOR <cmd>,[mem]
+        mov es:[cshp],cx
+        CURSOR HIDE
         call GetParam
-        mov dx,@DATA
+        mov dx,es
         mov ds,dx
         jc param_err
         mov bx,optD
@@ -125,17 +134,27 @@ do:
         jae cmpr   ;ok?
         mov cx,dx
   cmpr:
+        call Working2 ;Working
         lea si,f1buff
         lea di,f2buff
-        call Compare ;i: si=buf1,di=buf2 o: cy, ax=1 user lim.,ah=2 prg. lim.
+        call Compare ;i:si=buf1,di=buf2 o:cy,ax=1 user lim.,ah=2 prg. lim.
         jnc do
 eof:
         FCLOSE ;FCLOSE [handle]
         xchg bx,htmp
         FCLOSE
         mov bx,ax ;status w bx
+        ;--- pokaz param.b (tymczasowo?) ---
+         mov al,[maxDiff.bMax]
+         mov di,offset _b
+         call Byte2dDec
+         mov cx,PARBL
+         mov dx,offset par_b
+         call Write2Scr
+        ;----------------------------------
         jmp messages
 exit:
+        CURSOR SHOW,cshp
         mov ah,4ch
         int 21h
 
@@ -226,7 +245,7 @@ err_file_io:
         jmp exit
 
         EVEN
-vProc   DW Long2HexR,Long2DecR ;moze przeniesc
+vProc   DW Long2HexR,Long2DecR
 
         .DATA
 
@@ -236,23 +255,20 @@ PUBLIC  maxDiff,currOffs,diffCnt,param
 
 hTmp DW 1
 optD DW 0
+cshp DW ?
 
 currOffs CNT  <0>
 diffCnt  CNT  <0>
-maxDiff  DLIM <?,-1> ;-1 jako znacznik
-param    FL   <0,0,0> ;f0 rezerwowy...
-
-fSpec1 DB 79 DUP(0),0
-fSpec2 DB 79 DUP(0),0
+maxDiff  DLIM <?,-1>  ;-1 jako znacznik
+param    FL   <0,0,0> ;f0 rezerwowy
 
 INCLUDE .\INC\form.inc
 
-IFDEF VDT
- DB 13,10,'Version ',COMPDT
-ENDIF
-
 f1Size SIZEF<>
 f2Size SIZEF<>
+fbuffs LABEL
+fSpec1 DB TNBL DUP(?)
+fSpec2 DB TNBL DUP(?)
 f1Buff DB BLEN DUP(?)
 f2Buff DB BLEN DUP(?)
 

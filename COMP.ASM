@@ -1,5 +1,5 @@
-;--------------------------------+
-;BDIFF ** Compare:PROC rev. A ** |
+;--------------------------+
+;BDIFF.Compare:PROC rev. A |
 ;
 
 INCLUDE .\INC\bdiff.inc
@@ -26,7 +26,7 @@ comp:
         pop cx
         cmp ah,al
         je @@ev
-        call DiffSrv ;al=f1, ah=f2, proc. ma odtworzyc cx
+        call Loc_dfs ;al=f1, ah=f2, proc. ma odtworzyc cx
         inc bx
         cmp bx,MAXD ;limit programu dla znalezionych roznic
         je @@prt
@@ -51,7 +51,7 @@ comp:
         ret
 Compare ENDP
 
-DiffSrv PROC
+Loc_dfs PROC
         LOCALS
         push cx si di
         mov di,OFFSET _b1
@@ -68,7 +68,7 @@ DiffSrv PROC
         call Write2Scr
         pop di si cx
         ret
-DiffSrv ENDP
+Loc_dfs ENDP
 
         .DATA
 

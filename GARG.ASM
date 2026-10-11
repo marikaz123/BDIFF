@@ -1,5 +1,6 @@
-;BDIFF  * GetParam:PROC * Rev. B1 *
-;linia: <filespec1> <filespec2> [/B=nn] [/D]
+;------------------------------------------------+
+; BDIFF.GetParam:PROC * Rev. B1 *                |
+; linia: <filespec1> <filespec2> [/B=nn] [/D]
 ; wyj.: CY jesli blad, ax=kod bledu
 
 INCLUDE .\INC\bdiff.inc
@@ -12,8 +13,6 @@ PUBLIC GetParam
            JUMPS
 
 GetParam   PROC
-           mov ax,@DATA
-           mov es,ax
            mov si,80h
            cmp BYTE PTR [si],0
            je @@err1 ;nie ma argumentow
@@ -59,10 +58,10 @@ switch:
            or al,20h
            cmp al,'b'
            jne caseD
-           cmp es:[maxDiff.bMAX],-1 ; -1 jako znacznik (zmienic pozniej)
+           cmp es:[maxDiff.bMAX],-1 ; -1 jako znacznik (zmienic pozniej?)
            jne @@err2 ;juz podano
            cmp BYTE PTR [si],'='
-           jne @@b
+           jne @@b ; znak '=' nieobowiazkowy
            inc si
       @@b:
            lodsw
@@ -118,9 +117,9 @@ caseD:
 @@eop:
            cmp es:[param],11b
            jne @@err1
-           cmp es:[maxDiff.bMAX],-1 ; sprawdz znacznik
+           cmp es:[maxDiff.bMAX],-1
            jne @@1                  ; jak rowny -1
-           mov es:[maxDiff.bMAX],0  ; to wstaw 0 (zmienic pozniej!)
+           mov es:[maxDiff.bMAX],0  ; to wstaw 0 (czy to zmieniac?)
       @@1:
            xor ax,ax
            ret

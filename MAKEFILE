@@ -1,7 +1,4 @@
-#  makefile for BDIFF.EXE   --   'marikaz'
-#
-# /DDEBUG  - create debug version
-# /DVDT    - include version number
+#  makefile for BDIFF.EXE
 
 ASM=tasm
 LINK=tlink
@@ -12,10 +9,6 @@ LINKFLAGS=/v
 !else
 ASMFLAGS=/m
 LINKFLAGS=/x
-!endif
-
-!if $d(VDT)
-ASMFLAGS=$(ASMFLAGS) /dVDT
 !endif
 
 OUTDIR=bin

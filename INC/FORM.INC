@@ -1,4 +1,6 @@
-;----/ RAPORT /-------------------------------------------------/ BDIFF /---
+;BDIFF - raport, napisy, komunikaty
+
+;----/ RAPORT /--------------------------------------------------------------
 
 rhead  DB 'BDIFF v',VER,' *** (c)1996 ''marikaz''',13,10
        RHEADL = ($-rhead)
@@ -30,8 +32,7 @@ dhead  DB 13,10,'   Znalezione roznice:',13,10,13,10
        DB '   ----------  ---  ---',13,10
        DHEADL = ($-dhead)
 
-form0  LABEL
-       DB 3 DUP(20h)
+form0  DB 3 DUP(20h)
 _offs  DB '0000000000'
        DB 3 DUP (20h)
    _b1 DB '  '
@@ -40,11 +41,15 @@ _offs  DB '0000000000'
        DB 13,10
        FORM0L = ($-form0)
 
-;-----/ INFO i BLEDY /-------------------------------------------------------
+par_b  DB '   (' ;tymczasowo(?)
+   _b  DB 2 DUP(20h),')',13,10
+       PARBL = ($-par_b)
+
+;-----/ INFO I BLEDY /-------------------------------------------------------
 
 ;brak argumentow albo /?
 hErrMsg DB 'Porownaj binarnie dwa pliki i wyswietl roznice.',13,10,13,10
-        DB '   BDIFF.EXE [/d] [/b[=]nn] [drive:][path]<file1> [drive:][path]<file2>',13,10,13,10
+        DB '  BDIFF.EXE [/d] [/b[=]nn] [drive:][path]<file1> [drive:][path]<file2>',13,10,13,10
         DB '/b[=]nn      Przerwij po znalezieniu nn roznic, nn=0..99',13,10
         DB '             nn=0 nie przerywaj (domyslnie).',13,10
         DB '/d           Wyswietl ofsety w liczbach dziesietnych.',13,10
@@ -56,12 +61,12 @@ pErrMsg DB 'Nieprawidlowa skladnia lub przypadkowy znak w linii polecen.',13,10
         DB 'Wpisz BDIFF.EXE /?',13,10
         PEM = ($-pErrMsg)
 
-;nieprawidlowa liczba dla argumentu /b (4)
+;nieprawidlowa wartosc dla argumentu /b (4)
 bErrMsg DB 'Nieprawidlowa wartosc dla opcji /B.',13,10
         BEM = ($-bErrMsg)
 
 ;nieprawidlowa sciezka lub nazwa pliku (3)
-xErrMsg DB 'Blad w nazwie sciezki lub pliku.',13,10
+xErrMsg DB 'Blad w sciezce lub nazwie pliku.',13,10
         XEM = ($-xErrMsg) ;parser linii komend
 
 eErrMsg DB 'Jeden z plikow jest pusty.',13,10
@@ -82,5 +87,5 @@ dsMsg DB 13,10,'   Pliki maja rozne rozmiary.'
       DSM = ($-dsMsg)
 
 tmMsg DB 13,10,'   Znaleziono zbyt wiele roznic, '
-      DB 'dalsze porownywanie jest pozbawione sensu.',13,10
+      DB 'dalsze dzialanie jest pozbawione sensu.',13,10
       TMM = ($-tmMsg)

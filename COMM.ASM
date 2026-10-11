@@ -1,5 +1,5 @@
-;---------------------------+
-; BDIFF - wspolne procedury |
+;----------------------------+
+; BDIFF - wspolne procedury  |
 
 INCLUDE .\INC\bdiff.inc
 
@@ -9,41 +9,46 @@ INCLUDE .\INC\bdiff.inc
 PUBLIC Long2DecR,Long2HexR,Long2Dec
 PUBLIC ConvDate,ConvTime,Conv2Hex
 PUBLIC Write2Scr,CpyStr,TrueName
-;PUBLIC ToLower
-loc_0  DW  ?
+PUBLIC Byte2dDec,Working2 ;,ToLower
 
-;---------------------+
-;we: cx=liczba bajtow |
+loc_0  DW ?
+loc_1  DW 0
+wchrs  DB 7ch,2fh,2dh,5ch ;wiatraczek...
+
+;------------------------+
+;Pisz na stdout (ekran)  |
+;we: cx=liczba znakow
 ;    dx=ofset bufora
 Write2Scr PROC
-          push bx
+          push ax bx
           mov bx,STDOUT
           mov ah,40h
           int 21h
-          pop bx
+          pop bx ax
           ret
 Write2Scr ENDP
 
-;----------------------+
-;ds:si = cag zrodlowy  |
-;ds:di = docelowy
+;---------------------------+
+;Kopiuj ciag ASCIIZ         |
+;we: ds:si = ciag zrodlowy
+;    ds:di = docelowy
 CpyStr PROC
        LOCALS
        mov al,[si]
        or al,al
-       jz @@x
+       jz @@ex
        mov [di],al
        inc si
        inc di
        jmp CpyStr
-  @@x:
+ @@ex:
        ret
 CpyStr ENDP
 
-;--------------------------------------------+
-;we: ax = czas w formacie MBR                |
+;-----------------------------------------+
+;Konwertuj czas z formatu MBR na czytelny |
+;we: ax = czas w formacie MBR
 ;    ds:di = wskaznik na ciag docelowy
-
 ConvTime  PROC
           LOCALS
           mov cs:[loc_0],ax
@@ -71,9 +76,10 @@ ConvTime  PROC
           ret
 ConvTime  ENDP
 
-;-----------------------------+
-;we: ax = data w formacie MBR |
-;ds:di = wskaznik na cel
+;-----------------------------------------+
+;Konwertuj date z formatu MBR na czytelny |
+;we: ax = data w formacie MBR
+;    ds:di = wskaznik na cel
 ConvDate  PROC
           LOCALS
           mov cs:[loc_0],ax
@@ -113,8 +119,8 @@ ConvDate  PROC
           ret
 ConvDate  ENDP
 
-;----------------------------------+
-;konwertuj bajt w AL na ciag ascii |
+;--------------------------------------------+
+;konwertuj bajt w AL na ciag cyfr hex. ASCII |
 ;we: al = bajt
 ;    ds:di = wsk. na bufor
 Conv2Hex  PROC
@@ -127,7 +133,7 @@ Conv2Hex  PROC
           mov cx,2
     @@cv:
           xchg al,ah
-          and al,0fh  ;konwersja do ascii
+          and al,0fh  ;konwersja do ASCII
           cmp al,10   ;           .
           sbb al,69h  ;     .
           das         ; .
@@ -138,8 +144,22 @@ Conv2Hex  PROC
           ret
 Conv2Hex  ENDP
 
-;-----------------------------------+
-;konwertuj podwojne slowo w DX:AX   |
+;---------/ tymczasowo(?) dla param.b /--------+
+;Konwertuj bajt w al, zakr. 0..99(!) na ASCII  |
+;we: al=wartosc,
+;    ds:di=wsk. na bufor
+Byte2dDec PROC
+          push ax
+          aam
+          add ax,3030h
+          xchg ah,al
+          mov [di],ax
+          pop ax
+          ret
+Byte2dDec ENDP
+
+;-------------------------------------+
+;Konwertuj podwojne slowo w DX:AX     |
 ;do dziesietnego stringa (rev.dir.)
 ;we: dx:ax = wartosc do konwersji
 ;    ds:di = wsk. na koniec bufora
@@ -168,9 +188,9 @@ Long2DecR PROC
           ret
 Long2DecR ENDP
 
-;--------------------------------------+
-;konwertuj podw. slowo w DX:AX         |
-;na ciag cyfr hex. w ascii (rev.dir)
+;-----------------------------------------+
+;Konwertuj podwojne slowo w DX:AX         |
+;na ciag cyfr hex. w ASCII (rev.dir)
 ;we: dx:ax = wartosc do konwersji
 ;    ds:di = wsk. na koniec bufora
 ;wy: ds:di = wsk. na poczatek bufora
@@ -203,8 +223,8 @@ Long2HexR PROC
 Long2HexR ENDP
 
 ;----------------------------------+
-;konwertuj podwojne slowo w DX:AX  |
-;do ciagu dec. w ascii
+;Konwertuj podwojne slowo w DX:AX  |
+;do ciagu dec. w ASCII
 ;we: ds:di = wsk.na bufor docelow.
 Long2Dec PROC
          LOCALS
@@ -247,11 +267,9 @@ Long2Dec PROC
          ret
 Long2Dec ENDP
 
-;---------------------------------------------+
-;Zamien filespec na truename                  |
-;we: ds:si = wskaznik na filespec i truename
-;            (ten sam bufor)
-;wy: nie ma
+;-----------------------------------------------+
+;filespec -> truename                           |
+;we: ds:si = wsk. na bufor filespec i truename
 TrueName PROC
          push es
          mov ax,@DATA
@@ -263,12 +281,26 @@ TrueName PROC
          ret
 TrueName ENDP
 
+;--------------+
+;Dzialam...    |
+Working2 PROC
+         push ax bx cx
+         mov cx,1
+         mov bx,cs:[loc_1]
+         and bx,11b
+         mov ah,0ah
+         mov al,cs:[wchrs+bx]
+         int 10h
+         add bx,1
+         mov cs:[loc_1],bx
+         pop cx bx ax
+         ret
+Working2 ENDP
+
 COMMENT #
 ;-------------------------------------+
 ;Zamien na male litery                |
-;we: ds:di = wskaznik na ciag ascii
-;            !zakonczony zerem!
-;wy: nie ma
+;we: ds:di = wskaznik na ciag ASCIIZ
 ToLower  PROC
          LOCALS
          push cx si
